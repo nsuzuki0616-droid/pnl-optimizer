@@ -51,9 +51,7 @@
 alert('JS読み込みOK');
 
 // グローバル登録（Vercel対策）
-window.addWorker = addWorker;
-window.addMaterial = addMaterial;
-window.calculate = calculate;
+
 // 初期化
 window.addEventListener('DOMContentLoaded', () => {
   console.log('アプリ起動');
@@ -187,7 +185,89 @@ function renderMaterials(){
 
   // マスター一覧（編集・削除）
   materials.forEach((m,index)=>{
-    const row = document.createEleme
+    const row = document.createElement('div');
+
+    const name = document.createElement('input');
+    name.value = m.name;
+
+    const cost = document.createElement('input');
+    cost.type = 'number';
+    cost.value = m.cost;
+
+    const saveBtn = document.createElement('button');
+    saveBtn.innerText = '更新';
+    saveBtn.onclick = ()=>{
+      materials[index] = { name: name.value, cost: Number(cost.value) };
+      saveMaterials(materials);
+      renderMaterials();
+    };
+
+    const delBtn = document.createElement('button');
+    delBtn.innerText = '削除';
+    delBtn.onclick = ()=>{
+      materials.splice(index,1);
+      saveMaterials(materials);
+      renderMaterials();
+    };
+
+    row.appendChild(name);
+    row.appendChild(cost);
+    row.appendChild(saveBtn);
+    row.appendChild(delBtn);
+
+    div.appendChild(row);
+  });
+
+  // 入力用
+  for(let i=0;i<20;i++){
+    const wrapper = document.createElement('div');
+
+    const select = document.createElement('select');
+    select.className='material';
+
+    const empty = document.createElement('option');
+    empty.value='0';
+    empty.text='なし';
+    select.appendChild(empty);
+
+    materials.forEach(m=>{
+      const opt = document.createElement('option');
+      opt.value = m.cost;
+      opt.text = `${m.name} (${m.cost})`;
+      select.appendChild(opt);
+    });
+
+    const qty = document.createElement('input');
+    qty.type = 'number';
+    qty.placeholder = '数量';
+    qty.className = 'materialQty';
+    qty.value = 1;
+
+    wrapper.appendChild(select);
+    wrapper.appendChild(qty);
+    div.appendChild(wrapper);
+  }
+}
+
+function addMaterial(){
+  const name = document.getElementById('newMaterialName').value.trim();
+  const cost = Number(document.getElementById('newMaterialCost').value);
+
+  if(!name || !cost){
+    alert('材料名と単価を入力してください');
+    return;
+  }
+
+  const materials = getMaterials();
+  materials.push({name, cost});
+  saveMaterials(materials);
+
+  document.getElementById('newMaterialName').value='';
+  document.getElementById('newMaterialCost').value='';
+
+  alert('材料を保存しました');
+  renderMaterials();
+}
 }
 
 // =====================
@@ -219,7 +299,12 @@ function calculate(){
   document.getElementById('result').innerText =
     `利益:${profit}円 / 利益率:${margin.toFixed(1)}%`;
 }
+// グローバル登録（関数定義後）
+window.addWorker = addWorker;
+window.addMaterial = addMaterial;
+window.calculate = calculate;
 </script>
 
 </body>
 </html>
+
