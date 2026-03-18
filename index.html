@@ -61,6 +61,50 @@
 </div>
 
 <script>
+// 強制確認
+alert('JS読み込みOK');
+
+function testClick(){
+  alert('ボタン動作OK');
+}
+
+function getWorkers(){
+  return JSON.parse(localStorage.getItem('workers') || '[]');
+}
+
+function saveWorkers(data){
+  localStorage.setItem('workers', JSON.stringify(data));
+}
+
+function renderWorkers(){
+  const list = document.getElementById('workerList');
+  list.innerHTML = '';
+
+  const workers = getWorkers();
+
+  workers.forEach((w,index) => {
+    const div = document.createElement('div');
+
+    const text = document.createElement('span');
+    text.innerText = w.name + ' / ' + w.cost + ' ';
+
+    const delBtn = document.createElement('button');
+    delBtn.innerText = '削除';
+    delBtn.onclick = () => {
+      if(confirm('削除しますか？')){
+        const workers = getWorkers();
+        workers.splice(index,1);
+        saveWorkers(workers);
+        renderWorkers();
+      }
+    };
+
+    div.appendChild(text);
+    div.appendChild(delBtn);
+    list.appendChild(div);
+  });
+}
+  
 // 作業員入力生成（10人）
 const workerDiv = document.getElementById('workers');
 for(let i=0;i<10;i++){
