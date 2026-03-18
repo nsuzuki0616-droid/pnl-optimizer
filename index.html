@@ -98,6 +98,42 @@ function renderWorkers(){
   div.innerHTML='';
   const workers = getWorkers();
 
+  // マスター一覧（編集・削除）
+  workers.forEach((w,index)=>{
+    const row = document.createElement('div');
+
+    const name = document.createElement('input');
+    name.value = w.name;
+
+    const cost = document.createElement('input');
+    cost.type = 'number';
+    cost.value = w.cost;
+
+    const saveBtn = document.createElement('button');
+    saveBtn.innerText = '更新';
+    saveBtn.onclick = ()=>{
+      workers[index] = { name: name.value, cost: Number(cost.value) };
+      saveWorkers(workers);
+      renderWorkers();
+    };
+
+    const delBtn = document.createElement('button');
+    delBtn.innerText = '削除';
+    delBtn.onclick = ()=>{
+      workers.splice(index,1);
+      saveWorkers(workers);
+      renderWorkers();
+    };
+
+    row.appendChild(name);
+    row.appendChild(cost);
+    row.appendChild(saveBtn);
+    row.appendChild(delBtn);
+
+    div.appendChild(row);
+  });
+
+  // 選択用
   for(let i=0;i<10;i++){
     const select = document.createElement('select');
     select.className='worker';
@@ -119,8 +155,6 @@ function renderWorkers(){
 }
 
 function addWorker(){
-  console.log('作業員追加クリック');
-
   const name = document.getElementById('newWorkerName').value.trim();
   const cost = Number(document.getElementById('newWorkerCost').value);
 
@@ -139,6 +173,7 @@ function addWorker(){
   alert('作業員を保存しました');
   renderWorkers();
 }
+}
 
 // =====================
 // 材料
@@ -150,56 +185,9 @@ function renderMaterials(){
   div.innerHTML='';
   const materials = getMaterials();
 
-  for(let i=0;i<20;i++){
-    const wrapper = document.createElement('div');
-
-    const select = document.createElement('select');
-    select.className='material';
-
-    const empty = document.createElement('option');
-    empty.value='0';
-    empty.text='なし';
-    select.appendChild(empty);
-
-    materials.forEach(m=>{
-      const opt = document.createElement('option');
-      opt.value = m.cost;
-      opt.text = `${m.name} (${m.cost})`;
-      select.appendChild(opt);
-    });
-
-    const qty = document.createElement('input');
-    qty.type = 'number';
-    qty.placeholder = '数量';
-    qty.className = 'materialQty';
-    qty.value = 1;
-
-    wrapper.appendChild(select);
-    wrapper.appendChild(qty);
-    div.appendChild(wrapper);
-  }
-}
-
-function addMaterial(){
-  console.log('材料追加クリック');
-
-  const name = document.getElementById('newMaterialName').value.trim();
-  const cost = Number(document.getElementById('newMaterialCost').value);
-
-  if(!name || !cost){
-    alert('材料名と単価を入力してください');
-    return;
-  }
-
-  const materials = getMaterials();
-  materials.push({name, cost});
-  saveMaterials(materials);
-
-  document.getElementById('newMaterialName').value='';
-  document.getElementById('newMaterialCost').value='';
-
-  alert('材料を保存しました');
-  renderMaterials();
+  // マスター一覧（編集・削除）
+  materials.forEach((m,index)=>{
+    const row = document.createEleme
 }
 
 // =====================
@@ -235,4 +223,3 @@ function calculate(){
 
 </body>
 </html>
-
