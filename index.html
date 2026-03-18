@@ -1,105 +1,90 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>利益率・原価管理システム</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>現場利益率管理</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body { font-family: Arial; padding:20px; background:#f5f5f5; }
+    input, button { padding:8px; margin:5px; }
+    .card { background:white; padding:15px; border-radius:10px; margin-bottom:20px; }
+  </style>
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <h1>利益率・原価管理ツール</h1>
-        <p>車両・作業員・移動時間を含めた精密計算</p>
-    </header>
+<div class="card">
+  <h2>現場入力</h2>
+  <input id="siteName" placeholder="現場名"><br>
+  <input id="date" type="date"><br>
+  <input id="revenue" type="number" placeholder="売上"><br>
+  <input id="cost" type="number" placeholder="経費"><br>
+  <button onclick="calculate()">計算</button>
+  <button onclick="save()">保存</button>
 
-    <main>
-        <section class="card">
-            <h3>① 基本情報</h3>
-            <div class="input-group">
-                <label>案件名</label>
-                <input type="text" id="project-name" placeholder="例：〇〇様邸 工事">
-            </div>
-            <div class="input-group">
-                <label>売上金額 (円)</label>
-                <input type="number" id="revenue" placeholder="0">
-            </div>
-        </section>
-
-        <section class="card">
-            <h3>② リソース選択</h3>
-            <div class="input-group">
-                <label>使用車両</label>
-                <select id="vehicle-type">
-                    <option value="none">なし</option>
-                    <option value="light-truck">軽トラック (経費: 低)</option>
-                    <option value="heavy-truck">2tトラック (経費: 高)</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label>作業員ランク</label>
-                <select id="staff-rank">
-                    <option value="lead">主任 (高単価)</option>
-                    <option value="junior">一般 (標準単価)</option>
-                    <option value="intern">見習い (低単価)</option>
-                </select>
-            </div>
-        </section>
-
-        <section class="card">
-            <h3>③ 時間・距離</h3>
-            <div class="row">
-                <div class="input-group">
-                    <label>移動時間 (往復/分)</label>
-                    <input type="number" id="travel-time" value="0">
-                </div>
-                <div class="input-group">
-                    <label>走行距離 (km)</label>
-                    <input type="number" id="travel-distance" value="0">
-                </div>
-            </div>
-            <div class="input-group">
-                <label>実作業時間 (分)</label>
-                <input type="number" id="work-time" value="0">
-            </div>
-        </section>
-
-        <button id="calc-btn" class="primary-btn">利益率を計算する</button>
-
-        <hr>
-
-        <section id="result-area" class="result-card hidden">
-            <h3>計算結果</h3>
-            <div class="result-grid">
-                <div class="result-item">
-                    <span>総原価</span>
-                    <strong id="display-total-cost">¥0</strong>
-                </div>
-                <div class="result-item">
-                    <span>利益額</span>
-                    <strong id="display-profit">¥0</strong>
-                </div>
-                <div class="result-item highlight">
-                    <span>原価率</span>
-                    <strong id="display-cost-ratio">0%</strong>
-                </div>
-                <div class="result-item highlight">
-                    <span>利益率</span>
-                    <strong id="display-margin">0%</strong>
-                </div>
-            </div>
-            
-            <div class="cost-breakdown">
-                <h4>原価内訳</h4>
-                <p>労務費（移動込）: <span id="breakdown-labor">¥0</span></p>
-                <p>車両経費: <span id="breakdown-vehicle">¥0</span></p>
-                <p>事務・固定費配賦: <span id="breakdown-overhead">¥0</span></p>
-            </div>
-        </section>
-    </main>
+  <p id="result"></p>
 </div>
 
-<script src="logic.js"></script>
+<div class="card">
+  <h2>共有データ</h2>
+  <div id="list"></div>
+</div>
+
+<script>
+const supabase = supabase.createClient(
+  "https://YOUR_PROJECT_ID.supabase.co",
+  "YOUR_ANON_KEY"
+);
+
+function calculate(){
+  const revenue = Number(document.getElementById('revenue').value) || 0;
+  const cost = Number(document.getElementById('cost').value) || 0;
+
+  const profit = revenue - cost;
+  const margin = revenue ? (profit / revenue) * 100 : 0;
+
+  document.getElementById('result').innerText =
+    `利益: ${profit}円 / 利益率: ${margin.toFixed(1)}%`;
+}
+
+async function save(){
+  const siteName = document.getElementById('siteName').value;
+  const revenue = Number(document.getElementById('revenue').value);
+  const cost = Number(document.getElementById('cost').value);
+  const date = document.getElementById('date').value;
+
+  const profit = revenue - cost;
+  const margin = revenue ? (profit / revenue) * 100 : 0;
+
+  const { error } = await supabase
+    .from('sites')
+    .insert([{ siteName, revenue, otherCost: cost, profit, margin, date }]);
+
+  if(error){
+    alert('保存エラー');
+    console.log(error);
+  } else {
+    alert('保存成功');
+    load();
+  }
+}
+
+async function load(){
+  const { data, error } = await supabase
+    .from('sites')
+    .select('*');
+
+  const list = document.getElementById('list');
+  list.innerHTML = '';
+
+  data?.forEach(d => {
+    const div = document.createElement('div');
+    div.innerText = `${d.siteName} / ${d.profit}円`;
+    list.appendChild(div);
+  });
+}
+
+load();
+</script>
+
 </body>
 </html>
