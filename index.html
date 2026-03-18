@@ -47,30 +47,48 @@
 </div>
 
 <script>
+// 初期化
+window.addEventListener('DOMContentLoaded', () => {
+  console.log('アプリ起動');
+  renderWorkers();
+  renderMaterials();
+});
+
 // =====================
 // マスター管理
 // =====================
 function getWorkers(){
-  return JSON.parse(localStorage.getItem('workers')||'[]');
+  try{
+    return JSON.parse(localStorage.getItem('workers')||'[]');
+  }catch(e){
+    console.error(e);
+    return [];
+  }
 }
 function saveWorkers(data){
   localStorage.setItem('workers', JSON.stringify(data));
 }
 
 function getMaterials(){
-  return JSON.parse(localStorage.getItem('materials')||'[]');
+  try{
+    return JSON.parse(localStorage.getItem('materials')||'[]');
+  }catch(e){
+    console.error(e);
+    return [];
+  }
 }
 function saveMaterials(data){
   localStorage.setItem('materials', JSON.stringify(data));
 }
 
 // =====================
-// 作業員UI
+// 作業員
 // =====================
 function renderWorkers(){
   const div = document.getElementById('workerSelect');
-  div.innerHTML='';
+  if(!div) return;
 
+  div.innerHTML='';
   const workers = getWorkers();
 
   for(let i=0;i<10;i++){
@@ -94,68 +112,40 @@ function renderWorkers(){
 }
 
 function addWorker(){
-  const name = document.getElementById('newWorkerName').value;
+  console.log('作業員追加クリック');
+
+  const name = document.getElementById('newWorkerName').value.trim();
   const cost = Number(document.getElementById('newWorkerCost').value);
 
-  if(!name || !cost) return alert('入力してください');
+  if(!name || !cost){
+    alert('作業員名と単価を入力してください');
+    return;
+  }
 
   const workers = getWorkers();
   workers.push({name, cost});
   saveWorkers(workers);
 
+  document.getElementById('newWorkerName').value='';
+  document.getElementById('newWorkerCost').value='';
+
+  alert('作業員を保存しました');
   renderWorkers();
 }
 
 // =====================
-// 材料UI（複数追加）
+// 材料
 // =====================
 function renderMaterials(){
   const div = document.getElementById('materials');
-  div.innerHTML='';
+  if(!div) return;
 
+  div.innerHTML='';
   const materials = getMaterials();
 
   for(let i=0;i<20;i++){
     const select = document.createElement('select');
-    select.className='material';
+    select.className='materi
 
-    const empty = document.createElement('option');
-    empty.value='0';
-    empty.text='なし';
-    select.appendChild(empty);
-
-    materials.forEach(m=>{
-      const opt = document.createElement('option');
-      opt.value = m.cost;
-      opt.text = `${m.name} (${m.cost})`;
-      select.appendChild(opt);
-    });
-
-    div.appendChild(select);
-  }
-}
-
-function addMaterial(){
-  const name = document.getElementById('newMaterialName').value;
-  const cost = Number(document.getElementById('newMaterialCost').value);
-
-  if(!name || !cost) return alert('入力してください');
-
-  const materials = getMaterials();
-  materials.push({name, cost});
-  saveMaterials(materials);
-
-  renderMaterials();
-}
-
-// =====================
-// 計算
-// =====================
-function calculate(){
-  const revenue = Number(document.getElementById('revenue').value)||0;
-  const vehicle = Number(document.getElementById('vehicle').value)||0;
-
-  const workerEls = document.querySelectorAll('.worker');
-  let labor=0;
-  workerEls.forEach(w=>{
-    labor += Number(w.value)||0;
+</body>
+</html>
