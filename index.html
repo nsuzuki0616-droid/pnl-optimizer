@@ -53,7 +53,7 @@ alert('JS読み込みOK');
 // グローバル登録（Vercel対策）
 window.addWorker = addWorker;
 window.addMaterial = addMaterial;
-window.calculate = calcul
+window.calculate = calculate;
 // 初期化
 window.addEventListener('DOMContentLoaded', () => {
   console.log('アプリ起動');
@@ -151,6 +151,8 @@ function renderMaterials(){
   const materials = getMaterials();
 
   for(let i=0;i<20;i++){
+    const wrapper = document.createElement('div');
+
     const select = document.createElement('select');
     select.className='material';
 
@@ -166,7 +168,15 @@ function renderMaterials(){
       select.appendChild(opt);
     });
 
-    div.appendChild(select);
+    const qty = document.createElement('input');
+    qty.type = 'number';
+    qty.placeholder = '数量';
+    qty.className = 'materialQty';
+    qty.value = 1;
+
+    wrapper.appendChild(select);
+    wrapper.appendChild(qty);
+    div.appendChild(wrapper);
   }
 }
 
@@ -205,8 +215,13 @@ function calculate(){
   });
 
   let materialCost=0;
-  document.querySelectorAll('.material').forEach(m=>{
-    materialCost += Number(m.value)||0;
+  const materialEls = document.querySelectorAll('.material');
+  const qtyEls = document.querySelectorAll('.materialQty');
+
+  materialEls.forEach((m,i)=>{
+    const cost = Number(m.value)||0;
+    const qty = Number(qtyEls[i]?.value)||0;
+    materialCost += cost * qty;
   });
 
   const totalCost = labor + materialCost + vehicle;
@@ -220,3 +235,4 @@ function calculate(){
 
 </body>
 </html>
+
