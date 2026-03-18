@@ -1,3 +1,4 @@
+"use client";
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -135,13 +136,13 @@ export default function ProfitCalculatorApp() {
             onChange={(e) => handleChange("otherCost", e.target.value)}
           />
 
-          <Button
+          <Button type="button"
             onClick={() => setResult(calculateCosts(form, [], []))}
           >
             計算
           </Button>
 
-          <Button onClick={saveSite}>保存（全員共有）</Button>
+          <Button type="button" onClick={saveSite}>保存（全員共有）</Button>
 
           {result && (
             <div className="p-3 bg-gray-100">
@@ -173,4 +174,3 @@ export default function ProfitCalculatorApp() {
 // =============================
 console.assert(typeof calculateCosts === "function", "関数存在チェック");
 console.assert(calculateCosts({ revenue: 1000, otherCost: 500, workType: "day" }, [], []).profit === 500, "利益計算テスト");
-
