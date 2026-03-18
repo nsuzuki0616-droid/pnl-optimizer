@@ -2,87 +2,158 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>現場利益率管理</title>
+  <title>現場利益率管理（強化版）</title>
   <style>
     body { font-family: Arial; padding:20px; background:#f5f5f5; }
-    input, button { padding:8px; margin:5px; }
+    input, select, button { padding:8px; margin:5px; }
     .card { background:white; padding:15px; border-radius:10px; margin-bottom:20px; }
   </style>
 </head>
 <body>
 
 <div class="card">
-  <h2>現場入力（ローカル保存版）</h2>
+  <h2>現場入力</h2>
+
   <input id="siteName" placeholder="現場名"><br>
   <input id="date" type="date"><br>
+
+  <!-- 車両 -->
+  <label>車両：</label>
+  <select id="vehicle">
+    <option value="0">選択なし</option>
+    <option value="3000">軽自動車（3000円）</option>
+    <option value="8000">ダンプ（8000円）</option>
+  </select><br>
+
+  <!-- 作業員（最大10人） -->
+  <label>作業員（1人1人工=20000円）</label><br>
+  <div id="workers"></div>
+
+  <!-- 材料 -->
+  <label>材料：</label>
+  <select id="material">
+    <option value="0">なし</option>
+    <option value="5000">セメント（5000円）</option>
+    <option value="10000">鉄材（10000円）</option>
+  </select><br>
+
+  <!-- 移動 -->
+  <input id="distance" type="number" placeholder="移動距離(km)">
+  <input id="time" type="number" placeholder="移動時間(h)"><br>
+
   <input id="revenue" type="number" placeholder="売上"><br>
-  <input id="cost" type="number" placeholder="経費"><br>
-  <button type="button" onclick="calculate()">計算</button>
-  <button type="button" onclick="save()">保存</button>
+  <input id="other" type="number" placeholder="その他経費"><br>
+
+  <button onclick="calculate()">計算</button>
+  <button onclick="save()">保存</button>
 
   <p id="result"></p>
 </div>
 
 <div class="card">
-  <h2>保存データ（このPCのみ）</h2>
+  <h2>現場一覧</h2>
   <div id="list"></div>
 </div>
 
+<div class="card">
+  <h2>作業員別集計</h2>
+  <div id="workerSummary"></div>
+</div>
+
 <script>
-// =============================
-// 計算
-// =============================
-function calculate(){
-  const revenue = Number(document.getElementById('revenue').value) || 0;
-  const cost = Number(document.getElementById('cost').value) || 0;
-
-  const profit = revenue - cost;
-  const margin = revenue ? (profit / revenue) * 100 : 0;
-
-  document.getElementById('result').innerText =
-    `利益: ${profit}円 / 利益率: ${margin.toFixed(1)}%`;
+// 作業員入力生成（10人）
+const workerDiv = document.getElementById('workers');
+for(let i=0;i<10;i++){
+  const input = document.createElement('input');
+  input.placeholder = '作業員名';
+  input.className = 'worker';
+  workerDiv.appendChild(input);
 }
 
-// =============================
-// 保存（localStorage）
-// =============================
+function calculate(){
+  const revenue = Number(document.getElementById('revenue').value)||0;
+  const other = Number(document.getElementById('other').value)||0;
+
+  const vehicle = Number(document.getElementById('vehicle').value)||0;
+  const material = Number(document.getElementById('material').value)||0;
+
+  const distance = Number(document.getElementById('distance').value)||0;
+  const time = Number(document.getElementById('time').value)||0;
+
+  const workers = document.querySelectorAll('.worker');
+  let labor = 0;
+  workers.forEach(w=>{ if(w.value) labor += 20000; });
+
+  const travelCost = distance * 50 + time * 1000;
+
+  const totalCost = labor + vehicle + material + travelCost + other;
+  const profit = revenue - totalCost;
+  const margin = revenue ? (profit/revenue)*100 : 0;
+
+  document.getElementById('result').innerText =
+    `利益:${profit}円 / 利益率:${margin.toFixed(1)}%`;
+}
+
 function save(){
   const siteName = document.getElementById('siteName').value;
-  const revenue = Number(document.getElementById('revenue').value);
-  const cost = Number(document.getElementById('cost').value);
-  const date = document.getElementById('date').value;
+  const revenue = Number(document.getElementById('revenue').value)||0;
+  const other = Number(document.getElementById('other').value)||0;
 
-  const profit = revenue - cost;
-  const margin = revenue ? (profit / revenue) * 100 : 0;
+  const vehicle = Number(document.getElementById('vehicle').value)||0;
+  const material = Number(document.getElementById('material').value)||0;
 
-  const data = { siteName, revenue, cost, profit, margin, date };
+  const distance = Number(document.getElementById('distance').value)||0;
+  const time = Number(document.getElementById('time').value)||0;
 
-  const saved = JSON.parse(localStorage.getItem('sites') || '[]');
+  const workers = Array.from(document.querySelectorAll('.worker'))
+    .map(w=>w.value).filter(v=>v);
+
+  const labor = workers.length * 20000;
+  const travelCost = distance * 50 + time * 1000;
+
+  const totalCost = labor + vehicle + material + travelCost + other;
+  const profit = revenue - totalCost;
+  const margin = revenue ? (profit/revenue)*100 : 0;
+
+  const data = { siteName, workers, profit, margin };
+
+  const saved = JSON.parse(localStorage.getItem('sites')||'[]');
   saved.push(data);
-
   localStorage.setItem('sites', JSON.stringify(saved));
 
-  alert('保存しました');
   load();
 }
 
-// =============================
-// 読み込み
-// =============================
 function load(){
   const list = document.getElementById('list');
-  list.innerHTML = '';
+  list.innerHTML='';
 
-  const saved = JSON.parse(localStorage.getItem('sites') || '[]');
+  const saved = JSON.parse(localStorage.getItem('sites')||'[]');
 
-  saved.forEach(d => {
+  saved.forEach(d=>{
     const div = document.createElement('div');
-    div.innerText = `${d.siteName} / ${d.profit}円`;
+    div.innerText = `${d.siteName} / ${d.profit}円 (${d.margin.toFixed(1)}%)`;
     list.appendChild(div);
+  });
+
+  // 作業員集計
+  const summary = {};
+  saved.forEach(d=>{
+    d.workers.forEach(w=>{
+      summary[w] = (summary[w]||0)+1;
+    });
+  });
+
+  const sumDiv = document.getElementById('workerSummary');
+  sumDiv.innerHTML='';
+
+  Object.keys(summary).forEach(w=>{
+    const div = document.createElement('div');
+    div.innerText = `${w}：${summary[w]}人工`;
+    sumDiv.appendChild(div);
   });
 }
 
-// 初期ロード
 load();
 </script>
 
