@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>現場利益率管理</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <style>
     body { font-family: Arial; padding:20px; background:#f5f5f5; }
     input, button { padding:8px; margin:5px; }
@@ -13,28 +12,26 @@
 <body>
 
 <div class="card">
-  <h2>現場入力</h2>
+  <h2>現場入力（ローカル保存版）</h2>
   <input id="siteName" placeholder="現場名"><br>
   <input id="date" type="date"><br>
   <input id="revenue" type="number" placeholder="売上"><br>
   <input id="cost" type="number" placeholder="経費"><br>
-  <button onclick="calculate()">計算</button>
-  <button onclick="save()">保存</button>
+  <button type="button" onclick="calculate()">計算</button>
+  <button type="button" onclick="save()">保存</button>
 
   <p id="result"></p>
 </div>
 
 <div class="card">
-  <h2>共有データ</h2>
+  <h2>保存データ（このPCのみ）</h2>
   <div id="list"></div>
 </div>
 
 <script>
-const supabase = supabase.createClient(
-  "https://YOUR_PROJECT_ID.supabase.co",
-  "YOUR_ANON_KEY"
-);
-
+// =============================
+// 計算
+// =============================
 function calculate(){
   const revenue = Number(document.getElementById('revenue').value) || 0;
   const cost = Number(document.getElementById('cost').value) || 0;
@@ -46,7 +43,10 @@ function calculate(){
     `利益: ${profit}円 / 利益率: ${margin.toFixed(1)}%`;
 }
 
-async function save(){
+// =============================
+// 保存（localStorage）
+// =============================
+function save(){
   const siteName = document.getElementById('siteName').value;
   const revenue = Number(document.getElementById('revenue').value);
   const cost = Number(document.getElementById('cost').value);
@@ -55,34 +55,34 @@ async function save(){
   const profit = revenue - cost;
   const margin = revenue ? (profit / revenue) * 100 : 0;
 
-  const { error } = await supabase
-    .from('sites')
-    .insert([{ siteName, revenue, otherCost: cost, profit, margin, date }]);
+  const data = { siteName, revenue, cost, profit, margin, date };
 
-  if(error){
-    alert('保存エラー');
-    console.log(error);
-  } else {
-    alert('保存成功');
-    load();
-  }
+  const saved = JSON.parse(localStorage.getItem('sites') || '[]');
+  saved.push(data);
+
+  localStorage.setItem('sites', JSON.stringify(saved));
+
+  alert('保存しました');
+  load();
 }
 
-async function load(){
-  const { data, error } = await supabase
-    .from('sites')
-    .select('*');
-
+// =============================
+// 読み込み
+// =============================
+function load(){
   const list = document.getElementById('list');
   list.innerHTML = '';
 
-  data?.forEach(d => {
+  const saved = JSON.parse(localStorage.getItem('sites') || '[]');
+
+  saved.forEach(d => {
     const div = document.createElement('div');
     div.innerText = `${d.siteName} / ${d.profit}円`;
     list.appendChild(div);
   });
 }
 
+// 初期ロード
 load();
 </script>
 
