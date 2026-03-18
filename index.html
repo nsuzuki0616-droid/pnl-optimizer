@@ -47,6 +47,13 @@
 </div>
 
 <script>
+// 強制動作確認
+alert('JS読み込みOK');
+
+// グローバル登録（Vercel対策）
+window.addWorker = addWorker;
+window.addMaterial = addMaterial;
+window.calculate = calcul
 // 初期化
 window.addEventListener('DOMContentLoaded', () => {
   console.log('アプリ起動');
@@ -145,7 +152,71 @@ function renderMaterials(){
 
   for(let i=0;i<20;i++){
     const select = document.createElement('select');
-    select.className='materi
+    select.className='material';
+
+    const empty = document.createElement('option');
+    empty.value='0';
+    empty.text='なし';
+    select.appendChild(empty);
+
+    materials.forEach(m=>{
+      const opt = document.createElement('option');
+      opt.value = m.cost;
+      opt.text = `${m.name} (${m.cost})`;
+      select.appendChild(opt);
+    });
+
+    div.appendChild(select);
+  }
+}
+
+function addMaterial(){
+  console.log('材料追加クリック');
+
+  const name = document.getElementById('newMaterialName').value.trim();
+  const cost = Number(document.getElementById('newMaterialCost').value);
+
+  if(!name || !cost){
+    alert('材料名と単価を入力してください');
+    return;
+  }
+
+  const materials = getMaterials();
+  materials.push({name, cost});
+  saveMaterials(materials);
+
+  document.getElementById('newMaterialName').value='';
+  document.getElementById('newMaterialCost').value='';
+
+  alert('材料を保存しました');
+  renderMaterials();
+}
+
+// =====================
+// 計算
+// =====================
+function calculate(){
+  const revenue = Number(document.getElementById('revenue').value)||0;
+  const vehicle = Number(document.getElementById('vehicle').value)||0;
+
+  let labor=0;
+  document.querySelectorAll('.worker').forEach(w=>{
+    labor += Number(w.value)||0;
+  });
+
+  let materialCost=0;
+  document.querySelectorAll('.material').forEach(m=>{
+    materialCost += Number(m.value)||0;
+  });
+
+  const totalCost = labor + materialCost + vehicle;
+  const profit = revenue - totalCost;
+  const margin = revenue ? (profit/revenue)*100 : 0;
+
+  document.getElementById('result').innerText =
+    `利益:${profit}円 / 利益率:${margin.toFixed(1)}%`;
+}
+</script>
 
 </body>
 </html>
