@@ -2,10 +2,10 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>現場利益率管理（マスター強化版）</title>
+  <title>現場利益率管理（強化版）</title>
   <style>
     body { font-family: Arial; padding:20px; background:#f5f5f5; }
-    input, select, button { padding:6px; margin:4px; }
+    input, select, button { padding:8px; margin:5px; }
     .card { background:white; padding:15px; border-radius:10px; margin-bottom:20px; }
   </style>
 </head>
@@ -15,295 +15,148 @@
   <h2>現場入力</h2>
 
   <input id="siteName" placeholder="現場名"><br>
-
-  <!-- 作業員選択（マスター） -->
-  <h3>作業員（単価別）</h3>
-  <div id="workerSelect"></div>
-
-  <!-- 作業員マスター登録 -->
-  <input id="newWorkerName" placeholder="作業員名">
-  <input id="newWorkerCost" type="number" placeholder="単価">
-  <button onclick="addWorker()">作業員追加</button>
-
-  <!-- 材料 -->
-  <h3>材料（複数）</h3>
-  <div id="materials"></div>
-
-  <input id="newMaterialName" placeholder="材料名">
-  <input id="newMaterialCost" type="number" placeholder="単価">
-  <button onclick="addMaterial()">材料追加</button>
+  <input id="date" type="date"><br>
 
   <!-- 車両 -->
+  <label>車両：</label>
   <select id="vehicle">
-    <option value="0">車両なし</option>
-    <option value="3000">軽自動車</option>
-    <option value="8000">ダンプ</option>
+    <option value="0">選択なし</option>
+    <option value="3000">軽自動車（3000円）</option>
+    <option value="8000">ダンプ（8000円）</option>
   </select><br>
 
+  <!-- 作業員（最大10人） -->
+  <label>作業員（1人1人工=20000円）</label><br>
+  <div id="workers"></div>
+
+  <!-- 材料 -->
+  <label>材料：</label>
+  <select id="material">
+    <option value="0">なし</option>
+    <option value="5000">セメント（5000円）</option>
+    <option value="10000">鉄材（10000円）</option>
+  </select><br>
+
+  <!-- 移動 -->
+  <input id="distance" type="number" placeholder="移動距離(km)">
+  <input id="time" type="number" placeholder="移動時間(h)"><br>
+
   <input id="revenue" type="number" placeholder="売上"><br>
+  <input id="other" type="number" placeholder="その他経費"><br>
+
   <button onclick="calculate()">計算</button>
+  <button onclick="save()">保存</button>
 
   <p id="result"></p>
 </div>
 
+<div class="card">
+  <h2>現場一覧</h2>
+  <div id="list"></div>
+</div>
+
+<div class="card">
+  <h2>作業員別集計</h2>
+  <div id="workerSummary"></div>
+</div>
+
 <script>
-// 強制動作確認
-alert('JS読み込みOK');
-
-// グローバル登録（Vercel対策）
-
-// 初期化
-window.addEventListener('DOMContentLoaded', () => {
-  console.log('アプリ起動');
-  renderWorkers();
-  renderMaterials();
-});
-
-// =====================
-// マスター管理
-// =====================
-function getWorkers(){
-  try{
-    return JSON.parse(localStorage.getItem('workers')||'[]');
-  }catch(e){
-    console.error(e);
-    return [];
-  }
-}
-function saveWorkers(data){
-  localStorage.setItem('workers', JSON.stringify(data));
+// 作業員入力生成（10人）
+const workerDiv = document.getElementById('workers');
+for(let i=0;i<10;i++){
+  const input = document.createElement('input');
+  input.placeholder = '作業員名';
+  input.className = 'worker';
+  workerDiv.appendChild(input);
 }
 
-function getMaterials(){
-  try{
-    return JSON.parse(localStorage.getItem('materials')||'[]');
-  }catch(e){
-    console.error(e);
-    return [];
-  }
-}
-function saveMaterials(data){
-  localStorage.setItem('materials', JSON.stringify(data));
-}
-
-// =====================
-// 作業員
-// =====================
-function renderWorkers(){
-  const div = document.getElementById('workerSelect');
-  if(!div) return;
-
-  div.innerHTML='';
-  const workers = getWorkers();
-
-  // マスター一覧（編集・削除）
-  workers.forEach((w,index)=>{
-    const row = document.createElement('div');
-
-    const name = document.createElement('input');
-    name.value = w.name;
-
-    const cost = document.createElement('input');
-    cost.type = 'number';
-    cost.value = w.cost;
-
-    const saveBtn = document.createElement('button');
-    saveBtn.innerText = '更新';
-    saveBtn.onclick = ()=>{
-      workers[index] = { name: name.value, cost: Number(cost.value) };
-      saveWorkers(workers);
-      renderWorkers();
-    };
-
-    const delBtn = document.createElement('button');
-    delBtn.innerText = '削除';
-    delBtn.onclick = ()=>{
-      workers.splice(index,1);
-      saveWorkers(workers);
-      renderWorkers();
-    };
-
-    row.appendChild(name);
-    row.appendChild(cost);
-    row.appendChild(saveBtn);
-    row.appendChild(delBtn);
-
-    div.appendChild(row);
-  });
-
-  // 選択用
-  for(let i=0;i<10;i++){
-    const select = document.createElement('select');
-    select.className='worker';
-
-    const empty = document.createElement('option');
-    empty.value='';
-    empty.text='選択';
-    select.appendChild(empty);
-
-    workers.forEach(w=>{
-      const opt = document.createElement('option');
-      opt.value = w.cost;
-      opt.text = `${w.name} (${w.cost})`;
-      select.appendChild(opt);
-    });
-
-    div.appendChild(select);
-  }
-}
-
-function addWorker(){
-  const name = document.getElementById('newWorkerName').value.trim();
-  const cost = Number(document.getElementById('newWorkerCost').value);
-
-  if(!name || !cost){
-    alert('作業員名と単価を入力してください');
-    return;
-  }
-
-  const workers = getWorkers();
-  workers.push({name, cost});
-  saveWorkers(workers);
-
-  document.getElementById('newWorkerName').value='';
-  document.getElementById('newWorkerCost').value='';
-
-  alert('作業員を保存しました');
-  renderWorkers();
-}
-}
-
-// =====================
-// 材料
-// =====================
-function renderMaterials(){
-  const div = document.getElementById('materials');
-  if(!div) return;
-
-  div.innerHTML='';
-  const materials = getMaterials();
-
-  // マスター一覧（編集・削除）
-  materials.forEach((m,index)=>{
-    const row = document.createElement('div');
-
-    const name = document.createElement('input');
-    name.value = m.name;
-
-    const cost = document.createElement('input');
-    cost.type = 'number';
-    cost.value = m.cost;
-
-    const saveBtn = document.createElement('button');
-    saveBtn.innerText = '更新';
-    saveBtn.onclick = ()=>{
-      materials[index] = { name: name.value, cost: Number(cost.value) };
-      saveMaterials(materials);
-      renderMaterials();
-    };
-
-    const delBtn = document.createElement('button');
-    delBtn.innerText = '削除';
-    delBtn.onclick = ()=>{
-      materials.splice(index,1);
-      saveMaterials(materials);
-      renderMaterials();
-    };
-
-    row.appendChild(name);
-    row.appendChild(cost);
-    row.appendChild(saveBtn);
-    row.appendChild(delBtn);
-
-    div.appendChild(row);
-  });
-
-  // 入力用
-  for(let i=0;i<20;i++){
-    const wrapper = document.createElement('div');
-
-    const select = document.createElement('select');
-    select.className='material';
-
-    const empty = document.createElement('option');
-    empty.value='0';
-    empty.text='なし';
-    select.appendChild(empty);
-
-    materials.forEach(m=>{
-      const opt = document.createElement('option');
-      opt.value = m.cost;
-      opt.text = `${m.name} (${m.cost})`;
-      select.appendChild(opt);
-    });
-
-    const qty = document.createElement('input');
-    qty.type = 'number';
-    qty.placeholder = '数量';
-    qty.className = 'materialQty';
-    qty.value = 1;
-
-    wrapper.appendChild(select);
-    wrapper.appendChild(qty);
-    div.appendChild(wrapper);
-  }
-}
-
-function addMaterial(){
-  const name = document.getElementById('newMaterialName').value.trim();
-  const cost = Number(document.getElementById('newMaterialCost').value);
-
-  if(!name || !cost){
-    alert('材料名と単価を入力してください');
-    return;
-  }
-
-  const materials = getMaterials();
-  materials.push({name, cost});
-  saveMaterials(materials);
-
-  document.getElementById('newMaterialName').value='';
-  document.getElementById('newMaterialCost').value='';
-
-  alert('材料を保存しました');
-  renderMaterials();
-}
-}
-
-// =====================
-// 計算
-// =====================
 function calculate(){
   const revenue = Number(document.getElementById('revenue').value)||0;
+  const other = Number(document.getElementById('other').value)||0;
+
   const vehicle = Number(document.getElementById('vehicle').value)||0;
+  const material = Number(document.getElementById('material').value)||0;
 
-  let labor=0;
-  document.querySelectorAll('.worker').forEach(w=>{
-    labor += Number(w.value)||0;
-  });
+  const distance = Number(document.getElementById('distance').value)||0;
+  const time = Number(document.getElementById('time').value)||0;
 
-  let materialCost=0;
-  const materialEls = document.querySelectorAll('.material');
-  const qtyEls = document.querySelectorAll('.materialQty');
+  const workers = document.querySelectorAll('.worker');
+  let labor = 0;
+  workers.forEach(w=>{ if(w.value) labor += 20000; });
 
-  materialEls.forEach((m,i)=>{
-    const cost = Number(m.value)||0;
-    const qty = Number(qtyEls[i]?.value)||0;
-    materialCost += cost * qty;
-  });
+  const travelCost = distance * 50 + time * 1000;
 
-  const totalCost = labor + materialCost + vehicle;
+  const totalCost = labor + vehicle + material + travelCost + other;
   const profit = revenue - totalCost;
   const margin = revenue ? (profit/revenue)*100 : 0;
 
   document.getElementById('result').innerText =
     `利益:${profit}円 / 利益率:${margin.toFixed(1)}%`;
 }
-// グローバル登録（関数定義後）
-window.addWorker = addWorker;
-window.addMaterial = addMaterial;
-window.calculate = calculate;
+
+function save(){
+  const siteName = document.getElementById('siteName').value;
+  const revenue = Number(document.getElementById('revenue').value)||0;
+  const other = Number(document.getElementById('other').value)||0;
+
+  const vehicle = Number(document.getElementById('vehicle').value)||0;
+  const material = Number(document.getElementById('material').value)||0;
+
+  const distance = Number(document.getElementById('distance').value)||0;
+  const time = Number(document.getElementById('time').value)||0;
+
+  const workers = Array.from(document.querySelectorAll('.worker'))
+    .map(w=>w.value).filter(v=>v);
+
+  const labor = workers.length * 20000;
+  const travelCost = distance * 50 + time * 1000;
+
+  const totalCost = labor + vehicle + material + travelCost + other;
+  const profit = revenue - totalCost;
+  const margin = revenue ? (profit/revenue)*100 : 0;
+
+  const data = { siteName, workers, profit, margin };
+
+  const saved = JSON.parse(localStorage.getItem('sites')||'[]');
+  saved.push(data);
+  localStorage.setItem('sites', JSON.stringify(saved));
+
+  load();
+}
+
+function load(){
+  const list = document.getElementById('list');
+  list.innerHTML='';
+
+  const saved = JSON.parse(localStorage.getItem('sites')||'[]');
+
+  saved.forEach(d=>{
+    const div = document.createElement('div');
+    div.innerText = `${d.siteName} / ${d.profit}円 (${d.margin.toFixed(1)}%)`;
+    list.appendChild(div);
+  });
+
+  // 作業員集計
+  const summary = {};
+  saved.forEach(d=>{
+    d.workers.forEach(w=>{
+      summary[w] = (summary[w]||0)+1;
+    });
+  });
+
+  const sumDiv = document.getElementById('workerSummary');
+  sumDiv.innerHTML='';
+
+  Object.keys(summary).forEach(w=>{
+    const div = document.createElement('div');
+    div.innerText = `${w}：${summary[w]}人工`;
+    sumDiv.appendChild(div);
+  });
+}
+
+load();
 </script>
 
 </body>
 </html>
+
