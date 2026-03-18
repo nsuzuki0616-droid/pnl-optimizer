@@ -9,10 +9,10 @@ import { createClient } from "@supabase/supabase-js";
 // =============================
 // Supabase設定（←ここを書き換えてください）
 // =============================
-const supabase = createClient(
-  "https://YOUR_PROJECT_ID.supabase.co",
-  "YOUR_ANON_KEY"
-);
+//const supabase = createClient(
+  //"https://YOUR_PROJECT_ID.supabase.co",
+  //"YOUR_ANON_KEY"
+//);
 
 // =============================
 // 利益計算
