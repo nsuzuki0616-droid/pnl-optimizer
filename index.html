@@ -54,17 +54,6 @@
 
 <button onclick="saveSite()">保存</button>
 
-  // ===== 安全初期化 =====
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('addMatBtn').addEventListener('click', addMaterial);
-  document.getElementById('saveBtn').addEventListener('click', saveSite);
-
-  renderMaterialMaster();
-  renderMaterialInputs();
-  renderSites();
-});
-
-
   <!-- 移動 -->
   <input id="distance" type="number" placeholder="移動距離(km)">
   <input id="time" type="number" placeholder="移動時間(h)"><br>
@@ -84,6 +73,17 @@ document.addEventListener('DOMContentLoaded', () => {
 <div id="siteList"></div>
 
 <script>
+  
+  // ===== 安全初期化 =====
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('addMatBtn').addEventListener('click', addMaterial);
+  document.getElementById('saveBtn').addEventListener('click', saveSite);
+
+  renderMaterialMaster();
+  renderMaterialInputs();
+  renderSites();
+});
+
 // ===== 保存 =====
 function getSites(){
   return JSON.parse(localStorage.getItem('sites') || '[]');
