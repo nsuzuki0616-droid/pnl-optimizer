@@ -45,7 +45,7 @@
 <h2>材料マスター登録</h2>
 <input id="matName" placeholder="材料名">
 <input id="matCost" type="number" placeholder="単価">
-<button onclick="addMaterial()">追加</button>
+<button id="addMatBtn">追加</button>
 
 <div id="materialMaster"></div>
 
@@ -53,6 +53,16 @@
 <div id="materialInputs"></div>
 
 <button onclick="saveSite()">保存</button>
+
+  // ===== 安全初期化 =====
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('addMatBtn').addEventListener('click', addMaterial);
+  document.getElementById('saveBtn').addEventListener('click', saveSite);
+
+  renderMaterialMaster();
+  renderMaterialInputs();
+  renderSites();
+});
 
 
   <!-- 移動 -->
