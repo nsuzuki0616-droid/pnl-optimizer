@@ -11,7 +11,7 @@
   <input id="siteName" placeholder="現場名"><br>
   <input id="date" type="date"><br>
 
-<input id="revenue" type="number" placeholder="売上"><br>
+<input id="revenue" type="date" placeholder="売上"><br>
   
    <!-- 車両 -->
   <label>車両：</label>
@@ -23,7 +23,7 @@
 
   <!-- 重機 -->
   <label>重機：</label>
-  <select id="vehicle">
+  <select id="hevyMichine">
     <option value="0">選択なし</option>
     <option value="">ユンボ0.1ｔ</option>
     <option value="">ユンボ0.07ｔ</option>
@@ -110,6 +110,49 @@ function calculate(){
   document.getElementById('result').innerText =
     `利益:${profit}円 / 利益率:${margin.toFixed(1)}%`;
 }
+
+function save(){
+  const siteName = document.getElementById('siteName').value;
+  const revenue = Number(document.getElementById('revenue').value)||0;
+  const other = Number(document.getElementById('other').value)||0;
+
+  const vehicle = Number(document.getElementById('vehicle').value)||0;
+  const material = Number(document.getElementById('material').value)||0;
+
+  const distance = Number(document.getElementById('distance').value)||0;
+  const time = Number(document.getElementById('time').value)||0;
+
+  const workers = Array.from(document.querySelectorAll('.worker'))
+    .map(w=>w.value).filter(v=>v);
+
+  const labor = workers.length * 20000;
+  const travelCost = distance * 50 + time * 1000;
+
+  const totalCost = labor + vehicle + material + travelCost + other;
+  const profit = revenue - totalCost;
+  const margin = revenue ? (profit/revenue)*100 : 0;
+
+  const data = { siteName, workers, profit, margin };
+
+  const saved = JSON.parse(localStorage.getItem('sites')||'[]');
+  saved.push(data);
+  localStorage.setItem('sites', JSON.stringify(saved));
+
+  load();
+}
+
+function load(){
+  const list = document.getElementById('list');
+  list.innerHTML='';
+
+  const saved = JSON.parse(localStorage.getItem('sites')||'[]');
+
+  saved.forEach(d=>{
+    const div = document.createElement('div');
+    div.innerText = `${d.siteName} / ${d.profit}円 (${d.margin.toFixed(1)}%)`;
+    list.appendChild(div);
+  });
+  
 
 // ===== 表示 =====
 function renderSites(){
