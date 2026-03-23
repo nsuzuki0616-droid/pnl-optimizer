@@ -40,14 +40,20 @@
     <option value="">ユンボ0.1ｔ</option>
     <option value="">ユンボ0.07ｔ</option>
   </select><br>
-  
-<!-- 材料 -->
-  <label>材料：</label>
-  <select id="material">
-    <option value="0">なし</option>
-    <option value="5000">セメント（5000円）</option>
-    <option value="10000">鉄材（10000円）</option>
-  </select><br>
+
+  <!-- 材料　-->
+<h2>材料マスター登録</h2>
+<input id="matName" placeholder="材料名">
+<input id="matCost" type="number" placeholder="単価">
+<button onclick="addMaterial()">追加</button>
+
+<div id="materialMaster"></div>
+
+  <h3>材料選択（20件）</h3>
+<div id="materialInputs"></div>
+
+<button onclick="saveSite()">保存</button>
+
 
   <!-- 移動 -->
   <input id="distance" type="number" placeholder="移動距離(km)">
@@ -196,7 +202,77 @@ function renderSites(){
   });
 }
 
-// 初期表示
+  // =====================
+    qty.value=1;
+    qty.className='matQty';
+
+    wrapper.appendChild(select);
+    wrapper.appendChild(qty);
+    div.appendChild(wrapper);
+  }
+}
+
+// =====================
+// 現場保存
+// =====================
+function getSites(){
+  return JSON.parse(localStorage.getItem('sites')||'[]');
+}
+
+function saveSites(data){
+  localStorage.setItem('sites', JSON.stringify(data));
+}
+
+function saveSite(){
+  const siteName = document.getElementById('siteName').value;
+  const revenue = Number(document.getElementById('revenue').value)||0;
+
+  let materialCost=0;
+  document.querySelectorAll('.matSel').forEach((m,i)=>{
+    const cost = Number(m.value)||0;
+    const qty = Number(document.querySelectorAll('.matQty')[i].value)||0;
+    materialCost += cost * qty;
+  });
+
+  const profit = revenue - materialCost;
+  const margin = revenue ? (profit/revenue)*100 : 0;
+
+  const sites = getSites();
+  sites.push({ siteName, profit, margin });
+  saveSites(sites);
+
+  renderSites();
+}
+
+function renderSites(){
+  const div = document.getElementById('siteList');
+  div.innerHTML='';
+
+  const sites = getSites();
+
+  sites.forEach((s,i)=>{
+    const row = document.createElement('div');
+
+    row.innerText = `${s.siteName} / ${s.profit}円 (${s.margin.toFixed(1)}%)`;
+
+    const del = document.createElement('button');
+    del.innerText='削除';
+    del.onclick=()=>{
+      if(confirm('削除しますか？')){
+        sites.splice(i,1);
+        saveSites(sites);
+        renderSites();
+      }
+    };
+
+    row.appendChild(del);
+    div.appendChild(row);
+  });
+}
+
+// 初期
+renderMaterialMaster();
+renderMaterialInputs();
 renderSites();
 </script>
 
