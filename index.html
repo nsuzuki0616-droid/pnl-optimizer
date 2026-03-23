@@ -6,11 +6,49 @@
 </head>
 <body>
 
+<div class="card">
 <h2>現場入力</h2>
-<input id="siteName" placeholder="現場名">
-<input id="revenue" type="number" placeholder="売上">
+  <input id="siteName" placeholder="現場名"><br>
+  <input id="date" type="date"><br>
+
+<input id="revenue" type="number" placeholder="売上"><br>
+  
+   <!-- 車両 -->
+  <label>車両：</label>
+  <select id="vehicle">
+    <option value="0">選択なし</option>
+    <option value="3000">軽自動車（3000円）</option>
+    <option value="8000">ダンプ（8000円）</option>
+  </select><br>
+
+  <!-- 重機 -->
+  <label>重機：</label>
+  <select id="vehicle">
+    <option value="0">選択なし</option>
+    <option value="">ユンボ0.1ｔ</option>
+    <option value="">ユンボ0.07ｔ</option>
+  </select><br>
+  
+<!-- 材料 -->
+  <label>材料：</label>
+  <select id="material">
+    <option value="0">なし</option>
+    <option value="5000">セメント（5000円）</option>
+    <option value="10000">鉄材（10000円）</option>
+  </select><br>
+
+  <!-- 移動 -->
+  <input id="distance" type="number" placeholder="移動距離(km)">
+  <input id="time" type="number" placeholder="移動時間(h)"><br>
+
+  
 <input id="cost" type="number" placeholder="経費">
+<button onclick="calculate()">計算</button>
 <button onclick="saveSite()">保存</button>
+
+  <p id="result"></p>
+</div>
+
 
 <hr>
 
