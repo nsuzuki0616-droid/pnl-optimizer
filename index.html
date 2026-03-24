@@ -29,22 +29,12 @@
 <div id="workers"></div>
   
 <!-- 重機 -->
-  <label>重機：</label>
-  <select id="hevyMichine">
-    <option value="0">選択なし</option>
-    <option value="">ユンボ0.1ｔ</option>
-    <option value="">ユンボ0.07ｔ</option>
-  </select><br>
+<h3>重機（5台）</h3>
+<div id="machines"></div>
 
  <!-- 車両 -->
-  <label>車両：</label>
-  <select id="vehicle">
-    <option value="0">選択なし</option>
-    <option value="3000">軽自動車（3000円）</option>
-    <option value="8000">ダンプ（8000円）</option>
-  </select><br>
-
-  
+   <h3>車両（5台）</h3>
+<div id="vehicles"></div>
   
 <hr>
 
@@ -63,6 +53,8 @@ document.addEventListener('DOMContentLoaded', () => {
   renderMaterialInputs();
   renderSites();
   renderWorkers();
+  renderVehicles();
+renderMachines();
 });
 
 // =====================
@@ -237,6 +229,70 @@ function renderWorkers(){
     div.appendChild(row);
   }
 }
+ // =====================
+// 車両・重機のプルダウン
+// =====================
+  // 車両
+function renderVehicles(){
+  const div = document.getElementById('vehicles');
+  div.innerHTML='';
+
+  const vehicleList = [
+    {name:'軽自動車', cost:3000},
+    {name:'3ｔダンプ', cost:8000},
+    {name:'4ｔダンプ', cost:10000}
+  ];
+
+  for(let i=0;i<5;i++){
+    const select = document.createElement('select');
+    select.className='vehicleSel';
+
+    const empty = document.createElement('option');
+    empty.value='0';
+    empty.text='選択なし';
+    select.appendChild(empty);
+
+    vehicleList.forEach(v=>{
+      const opt = document.createElement('option');
+      opt.value = v.cost;
+      opt.text = `${v.name} (${v.cost})`;
+      select.appendChild(opt);
+    });
+
+    div.appendChild(select);
+  }
+}
+
+// 重機
+function renderMachines(){
+  const div = document.getElementById('machines');
+  div.innerHTML='';
+
+  const machineList = [
+    {name:'ユンボ0.1t', cost:15000},
+    {name:'ユンボ0.07t', cost:12000},
+    {name:'バックホー', cost:20000}
+  ];
+
+  for(let i=0;i<5;i++){
+    const select = document.createElement('select');
+    select.className='machineSel';
+
+    const empty = document.createElement('option');
+    empty.value='0';
+    empty.text='選択なし';
+    select.appendChild(empty);
+
+    machineList.forEach(m=>{
+      const opt = document.createElement('option');
+      opt.value = m.cost;
+      opt.text = `${m.name} (${m.cost})`;
+      select.appendChild(opt);
+    });
+
+    div.appendChild(select);
+  }
+}
 // =====================
 // 現場保存
 // =====================
@@ -285,13 +341,20 @@ function saveSite(){
     }
   });
 
-  // 車両
-  const vehicle = Number(document.getElementById('vehicle').value)||0;
+// 車両合計
+let vehicleCost = 0;
+document.querySelectorAll('.vehicleSel').forEach(v=>{
+  vehicleCost += Number(v.value)||0;
+});
 
-  // 合計
-  const totalCost = materialCost + laborCost + vehicle;
+// 重機合計
+let machineCost = 0;
+document.querySelectorAll('.machineSel').forEach(m=>{
+  machineCost += Number(m.value)||0;
+});
 
   // 利益
+  const totalCost = materialCost + laborCost + vehicleCost + machineCost;
   const profit = revenue - totalCost;
   const margin = revenue ? (profit/revenue)*100 : 0;
 
