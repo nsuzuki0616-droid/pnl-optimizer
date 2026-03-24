@@ -371,10 +371,10 @@ document.querySelectorAll('.machineSel').forEach(m=>{
 合計:${totalCost}円
 利益:${profit}円 (${margin.toFixed(1)}%)`;
 
-   if(profit < 0){
-    result.style.color = 'red';
-  }else{
-    result.style.color = 'green';
+  // if(profit < 0){
+   // result.style.color = 'red';
+  //}else{
+   // result.style.color = 'green';
 
   const sites = getSites();
   sites.push({ siteName, profit, margin });
