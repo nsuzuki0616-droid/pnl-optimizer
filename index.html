@@ -34,6 +34,9 @@
    <h3>車両（5台）</h3>
 <div id="vehicles"></div>
 
+<h3>計算結果</h3>
+<p id="costResult">ここに結果が出ます</p>
+  
 <button id="saveBtn">保存</button>
   
 <hr>
@@ -55,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderWorkers();
   renderVehicles();
 renderMachines();
+renderCostResult();
 });
 
 // =====================
@@ -357,6 +361,20 @@ document.querySelectorAll('.machineSel').forEach(m=>{
   const totalCost = materialCost + laborCost + vehicleCost + machineCost;
   const profit = revenue - totalCost;
   const margin = revenue ? (profit/revenue)*100 : 0;
+
+  document.getElementById('costResult').innerText =
+  `材料:${materialCost}円 
+人工:${laborCost}円 
+車両:${vehicleCost}円 
+重機:${machineCost}円
+
+合計:${totalCost}円
+利益:${profit}円 (${margin.toFixed(1)}%)`;
+
+   if(profit < 0){
+    result.style.color = 'red';
+  }else{
+    result.style.color = 'green';
 
   const sites = getSites();
   sites.push({ siteName, profit, margin });
