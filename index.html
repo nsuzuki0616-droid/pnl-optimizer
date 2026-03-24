@@ -1,80 +1,38 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>現場管理（保存＋削除）</title>
+<meta charset="UTF-8">
+<title>現場管理アプリ</title>
 </head>
 <body>
 
-<div class="card">
-<h2>現場入力</h2>
-  <input id="siteName" placeholder="現場名"><br>
-  <input id="date" type="date"><br>
-
-<input id="revenue" type="date" placeholder="売上"><br>
-  
-   <!-- 車両 -->
-  <label>車両：</label>
-  <select id="vehicle">
-    <option value="0">選択なし</option>
-    <option value="3000">軽自動車（3000円）</option>
-    <option value="8000">ダンプ（8000円）</option>
-  </select><br>
-
-  <!-- 人工 -->
-  <label>人工：</label>
-  <select id="">
-    <option value="38000">西田</option>
-    <option value="38000">関口</option>
-    <option value="35000">川田</option>
-    <option value="20000">鈴木</option>
-    <option value="15000">作業員①</option>
-    <option value="15000">作業員②</option>
-    <option value="15000">作業員③</option>
-  </select><br>
-
-  <!-- 重機 -->
-  <label>重機：</label>
-  <select id="hevyMichine">
-    <option value="0">選択なし</option>
-    <option value="">ユンボ0.1ｔ</option>
-    <option value="">ユンボ0.07ｔ</option>
-  </select><br>
-
-  <!-- 材料　-->
-<h2>材料マスター登録</h2>
+<h2>■ 材料マスター</h2>
 <input id="matName" placeholder="材料名">
 <input id="matCost" type="number" placeholder="単価">
 <button id="addMatBtn">追加</button>
 
 <div id="materialMaster"></div>
 
-  <h3>材料選択（20件）</h3>
+<hr>
+
+<h2>■ 現場入力</h2>
+<input id="siteName" placeholder="現場名"><br>
+<input id="revenue" type="number" placeholder="売上"><br>
+
+<h3>材料（20件）</h3>
 <div id="materialInputs"></div>
 
-<button onclick="saveSite()">保存</button>
-
-  <!-- 移動 -->
-  <input id="distance" type="number" placeholder="移動距離(km)">
-  <input id="time" type="number" placeholder="移動時間(h)"><br>
-
-  
-<input id="cost" type="number" placeholder="経費">
-<button onclick="calculate()">計算</button>
-<button onclick="saveSite()">保存</button>
-
-  <p id="result"></p>
-</div>
-
+<button id="saveBtn">保存</button>
 
 <hr>
 
-<h2>現場一覧</h2>
+<h2>■ 現場一覧</h2>
 <div id="siteList"></div>
 
 <script>
-  
-  // ===== 安全初期化 =====
+// =====================
+// 初期化
+// =====================
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('addMatBtn').addEventListener('click', addMaterial);
   document.getElementById('saveBtn').addEventListener('click', saveSite);
@@ -84,7 +42,123 @@ document.addEventListener('DOMContentLoaded', () => {
   renderSites();
 });
 
-// ===== 保存 =====
+// =====================
+// 材料マスター
+// =====================
+function getMaterials(){
+  return JSON.parse(localStorage.getItem('materials') || '[]');
+}
+
+function saveMaterials(data){
+  localStorage.setItem('materials', JSON.stringify(data));
+}
+
+function addMaterial(){
+  const name = document.getElementById('matName').value.trim();
+  const cost = Number(document.getElementById('matCost').value);
+
+  if(!name || !cost){
+    alert('入力してください');
+    return;
+  }
+
+  const materials = getMaterials();
+  materials.push({name, cost});
+  saveMaterials(materials);
+
+  document.getElementById('matName').value='';
+  document.getElementById('matCost').value='';
+
+  renderMaterialMaster();
+  renderMaterialInputs();
+}
+
+function renderMaterialMaster(){
+  const div = document.getElementById('materialMaster');
+  div.innerHTML='';
+
+  const materials = getMaterials();
+
+  materials.forEach((m,i)=>{
+    const row = document.createElement('div');
+
+    const name = document.createElement('input');
+    name.value = m.name;
+
+    const cost = document.createElement('input');
+    cost.type='number';
+    cost.value = m.cost;
+
+    const saveBtn = document.createElement('button');
+    saveBtn.innerText='更新';
+    saveBtn.onclick=()=>{
+      materials[i] = { name:name.value, cost:Number(cost.value)};
+      saveMaterials(materials);
+      renderMaterialMaster();
+      renderMaterialInputs();
+    };
+
+    const delBtn = document.createElement('button');
+    delBtn.innerText='削除';
+    delBtn.onclick=()=>{
+      if(confirm('削除しますか？')){
+        materials.splice(i,1);
+        saveMaterials(materials);
+        renderMaterialMaster();
+        renderMaterialInputs();
+      }
+    };
+
+    row.appendChild(name);
+    row.appendChild(cost);
+    row.appendChild(saveBtn);
+    row.appendChild(delBtn);
+
+    div.appendChild(row);
+  });
+}
+
+// =====================
+// 材料入力
+// =====================
+function renderMaterialInputs(){
+  const div = document.getElementById('materialInputs');
+  div.innerHTML='';
+
+  const materials = getMaterials();
+
+  for(let i=0;i<20;i++){
+    const wrapper = document.createElement('div');
+
+    const select = document.createElement('select');
+    select.className='matSel';
+
+    const empty = document.createElement('option');
+    empty.value='0';
+    empty.text='なし';
+    select.appendChild(empty);
+
+    materials.forEach(m=>{
+      const opt = document.createElement('option');
+      opt.value = m.cost;
+      opt.text = `${m.name} (${m.cost})`;
+      select.appendChild(opt);
+    });
+
+    const qty = document.createElement('input');
+    qty.type='number';
+    qty.value=1;
+    qty.className='matQty';
+
+    wrapper.appendChild(select);
+    wrapper.appendChild(qty);
+    div.appendChild(wrapper);
+  }
+}
+
+// =====================
+// 現場保存
+// =====================
 function getSites(){
   return JSON.parse(localStorage.getItem('sites') || '[]');
 }
@@ -95,151 +169,20 @@ function saveSites(data){
 
 function saveSite(){
   const siteName = document.getElementById('siteName').value;
-  const revenue = Number(document.getElementById('revenue').value) || 0;
-  const cost = Number(document.getElementById('cost').value) || 0;
+  const revenue = Number(document.getElementById('revenue').value)||0;
 
   if(!siteName){
-    alert('現場名を入力してください');
+    alert('現場名を入力');
     return;
   }
 
-  const profit = revenue - cost;
-  const margin = revenue ? (profit / revenue) * 100 : 0;
-
-  const sites = getSites();
-  sites.push({ siteName, revenue, cost, profit, margin });
-  saveSites(sites);
-
-  alert('保存しました');
-  renderSites();
-}
-
-  // ===== 計算式 =====
-function calculate(){
-  const revenue = Number(document.getElementById('revenue').value)||0;
-  const other = Number(document.getElementById('other').value)||0;
-
-  const vehicle = Number(document.getElementById('vehicle').value)||0;
-  const material = Number(document.getElementById('material').value)||0;
-
-  const distance = Number(document.getElementById('distance').value)||0;
-  const time = Number(document.getElementById('time').value)||0;
-
-  const workers = document.querySelectorAll('.worker');
-  let labor = 0;
-  workers.forEach(w=>{ if(w.value) labor += 20000; });
-
-  const travelCost = distance * 50 + time * 1000;
-
-  const totalCost = labor + vehicle + material + travelCost + other;
-  const profit = revenue - totalCost;
-  const margin = revenue ? (profit/revenue)*100 : 0;
-
-  document.getElementById('result').innerText =
-    `利益:${profit}円 / 利益率:${margin.toFixed(1)}%`;
-}
-
-function save(){
-  const siteName = document.getElementById('siteName').value;
-  const revenue = Number(document.getElementById('revenue').value)||0;
-  const other = Number(document.getElementById('other').value)||0;
-
-  const vehicle = Number(document.getElementById('vehicle').value)||0;
-  const material = Number(document.getElementById('material').value)||0;
-
-  const distance = Number(document.getElementById('distance').value)||0;
-  const time = Number(document.getElementById('time').value)||0;
-
-  const workers = Array.from(document.querySelectorAll('.worker'))
-    .map(w=>w.value).filter(v=>v);
-
-  const labor = workers.length * 20000;
-  const travelCost = distance * 50 + time * 1000;
-
-  const totalCost = labor + vehicle + material + travelCost + other;
-  const profit = revenue - totalCost;
-  const margin = revenue ? (profit/revenue)*100 : 0;
-
-  const data = { siteName, workers, profit, margin };
-
-  const saved = JSON.parse(localStorage.getItem('sites')||'[]');
-  saved.push(data);
-  localStorage.setItem('sites', JSON.stringify(saved));
-
-  load();
-}
-
-function load(){
-  const list = document.getElementById('list');
-  list.innerHTML='';
-
-  const saved = JSON.parse(localStorage.getItem('sites')||'[]');
-
-  saved.forEach(d=>{
-    const div = document.createElement('div');
-    div.innerText = `${d.siteName} / ${d.profit}円 (${d.margin.toFixed(1)}%)`;
-    list.appendChild(div);
-  });
-} 
-
-// ===== 表示 =====
-function renderSites(){
-  const list = document.getElementById('siteList');
-  list.innerHTML = '';
-
-  const sites = getSites();
-
-  sites.forEach((s, index) => {
-    const div = document.createElement('div');
-
-    const text = document.createElement('span');
-    text.innerText = `${s.siteName} / 利益:${s.profit}円 (${s.margin.toFixed(1)}%) `;
-
-    const delBtn = document.createElement('button');
-    delBtn.innerText = '削除';
-    delBtn.onclick = () => {
-      if(confirm('削除しますか？')){
-        const sites = getSites();
-        sites.splice(index, 1);
-        saveSites(sites);
-        renderSites();
-      }
-    };
-
-    div.appendChild(text);
-    div.appendChild(delBtn);
-    list.appendChild(div);
-  });
-
-  // =====================
-  //  qty.value=1;
-   // qty.className='matQty';
-
-    //wrapper.appendChild(select);
-    //wrapper.appendChild(qty);
-    //div.appendChild(wrapper);
-  }
-
-// =====================
-// 現場保存
-// =====================
-function getSites(){
-  return JSON.parse(localStorage.getItem('sites')||'[]');
-}
-
-function saveSites(data){
-  localStorage.setItem('sites', JSON.stringify(data));
-}
-
-function saveSite(){
-  const siteName = document.getElementById('siteName').value;
-  const revenue = Number(document.getElementById('revenue').value)||0;
-
   let materialCost=0;
-  document.querySelectorAll('.matSel').forEach((m,i)=>{
-    const cost = Number(m.value)||0;
-    const qty = Number(document.querySelectorAll('.matQty')[i].value)||0;
-    materialCost += cost * qty;
+
+  const mats = document.querySelectorAll('.matSel');
+  const qtys = document.querySelectorAll('.matQty');
+
+  mats.forEach((m,i)=>{
+    materialCost += (Number(m.value)||0) * (Number(qtys[i].value)||0);
   });
 
   const profit = revenue - materialCost;
@@ -249,9 +192,13 @@ function saveSite(){
   sites.push({ siteName, profit, margin });
   saveSites(sites);
 
+  alert('保存しました');
   renderSites();
 }
 
+// =====================
+// 表示
+// =====================
 function renderSites(){
   const div = document.getElementById('siteList');
   div.innerHTML='';
@@ -261,7 +208,7 @@ function renderSites(){
   sites.forEach((s,i)=>{
     const row = document.createElement('div');
 
-    row.innerText = `${s.siteName} / ${s.profit}円 (${s.margin.toFixed(1)}%)`;
+    row.innerText = `${s.siteName} / 利益:${s.profit}円 (${s.margin.toFixed(1)}%) `;
 
     const del = document.createElement('button');
     del.innerText='削除';
@@ -277,12 +224,11 @@ function renderSites(){
     div.appendChild(row);
   });
 }
-
-// 初期
-renderMaterialMaster();
-renderMaterialInputs();
-renderSites();
 </script>
+
+</body>
+</html>
+
 
 </body>
 </html>
