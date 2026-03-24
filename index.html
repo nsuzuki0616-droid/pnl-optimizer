@@ -25,17 +25,8 @@
 <button id="saveBtn">保存</button>
 
   <!-- 人工 -->
-  <label>人工：</label>
-  <select id="">
-    <option value="38000">西田</option>
-    <option value="38000">関口</option>
-    <option value="35000">川田</option>
-    <option value="20000">鈴木</option>
-    <option value="15000">作業員①</option>
-    <option value="15000">作業員②</option>
-    <option value="15000">作業員③</option>
-    <option value="0">選択なし</option>
-  </select><br>
+  <h3>人工（8人）</h3>
+<div id="workers"></div>
   
 <!-- 重機 -->
   <label>重機：</label>
@@ -71,6 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderMaterialMaster();
   renderMaterialInputs();
   renderSites();
+  renderWorkers();
 });
 
 // =====================
@@ -187,6 +179,63 @@ function renderMaterialInputs(){
   }
 }
 
+  // =====================
+// 人工
+// =====================
+function renderWorkers(){
+  const div = document.getElementById('workers');
+  div.innerHTML='';
+
+  const workerList = [
+    {name:'西田', day:38000, hour:4000},
+    {name:'関口', day:38000, hour:4000},
+    {name:'川田', day:35000, hour:3500},
+    {name:'鈴木', day:20000, hour:2500},
+    {name:'作業員①', day:15000, hour:2000},
+    {name:'作業員②', day:15000, hour:2000},
+    {name:'作業員③', day:15000, hour:2000}
+  ];
+
+  for(let i=0;i<8;i++){
+    const row = document.createElement('div');
+
+    // 作業員選択
+    const select = document.createElement('select');
+    select.className='workerSel';
+
+    const empty = document.createElement('option');
+    empty.value='';
+    empty.text='選択';
+    select.appendChild(empty);
+
+    workerList.forEach(w=>{
+      const opt = document.createElement('option');
+      opt.value = JSON.stringify(w);
+      opt.text = w.name;
+      select.appendChild(opt);
+    });
+
+    // 日 or 時間
+    const type = document.createElement('select');
+    type.className='workType';
+    type.innerHTML = `
+      <option value="day">日</option>
+      <option value="hour">時間</option>
+    `;
+
+    // 時間入力
+    const hour = document.createElement('input');
+    hour.type='number';
+    hour.placeholder='時間';
+    hour.className='workHour';
+    hour.value=8;
+
+    row.appendChild(select);
+    row.appendChild(type);
+    row.appendChild(hour);
+
+    div.appendChild(row);
+  }
 // =====================
 // 現場保存
 // =====================
@@ -198,7 +247,27 @@ function saveSites(data){
   localStorage.setItem('sites', JSON.stringify(data));
 }
 
-function saveSite(){
+function saveSite(
+let laborCost = 0;
+
+const workers = document.querySelectorAll('.workerSel');
+const types = document.querySelectorAll('.workType');
+const hours = document.querySelectorAll('.workHour');
+
+workers.forEach((w,i)=>{
+  if(!w.value) return;
+
+  const data = JSON.parse(w.value);
+  const type = types[i].value;
+
+  if(type === 'day'){
+    laborCost += data.day;
+  }else{
+    laborCost += data.hour * (Number(hours[i].value)||0);
+  }
+});
+  
+){
   const siteName = document.getElementById('siteName').value;
   const revenue = Number(document.getElementById('revenue').value)||0;
 
@@ -216,9 +285,35 @@ function saveSite(){
     materialCost += (Number(m.value)||0) * (Number(qtys[i].value)||0);
   });
 
-  const profit = revenue - materialCost;
-  const margin = revenue ? (profit/revenue)*100 : 0;
+ // 👇 ここ追加（人工）
+let laborCost = 0;
 
+const workers = document.querySelectorAll('.workerSel');
+const types = document.querySelectorAll('.workType');
+const hours = document.querySelectorAll('.workHour');
+
+workers.forEach((w,i)=>{
+  if(!w.value) return;
+
+  const data = JSON.parse(w.value);
+  const type = types[i].value;
+
+  if(type === 'day'){
+    laborCost += data.day;
+  }else{
+    laborCost += data.hour * (Number(hours[i].value)||0);
+  }
+});
+
+// 👇 車両
+const vehicle = Number(document.getElementById('vehicle').value)||0;
+
+// 👇 合計
+const totalCost = materialCost + laborCost + vehicle;
+
+// 👇 利益
+const profit = revenue - totalCost;
+const margin = revenue ? (profit/revenue)*100 : 0;
   const sites = getSites();
   sites.push({ siteName, profit, margin });
   saveSites(sites);
