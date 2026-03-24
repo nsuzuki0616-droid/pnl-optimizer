@@ -247,27 +247,7 @@ function saveSites(data){
   localStorage.setItem('sites', JSON.stringify(data));
 }
 
-function saveSite(
-let laborCost = 0;
-
-const workers = document.querySelectorAll('.workerSel');
-const types = document.querySelectorAll('.workType');
-const hours = document.querySelectorAll('.workHour');
-
-workers.forEach((w,i)=>{
-  if(!w.value) return;
-
-  const data = JSON.parse(w.value);
-  const type = types[i].value;
-
-  if(type === 'day'){
-    laborCost += data.day;
-  }else{
-    laborCost += data.hour * (Number(hours[i].value)||0);
-  }
-});
-  
-){
+function saveSite(){
   const siteName = document.getElementById('siteName').value;
   const revenue = Number(document.getElementById('revenue').value)||0;
 
@@ -276,8 +256,8 @@ workers.forEach((w,i)=>{
     return;
   }
 
+  // 材料
   let materialCost=0;
-
   const mats = document.querySelectorAll('.matSel');
   const qtys = document.querySelectorAll('.matQty');
 
@@ -285,35 +265,35 @@ workers.forEach((w,i)=>{
     materialCost += (Number(m.value)||0) * (Number(qtys[i].value)||0);
   });
 
- // 👇 ここ追加（人工）
-let laborCost = 0;
+  // 人工
+  let laborCost = 0;
+  const workers = document.querySelectorAll('.workerSel');
+  const types = document.querySelectorAll('.workType');
+  const hours = document.querySelectorAll('.workHour');
 
-const workers = document.querySelectorAll('.workerSel');
-const types = document.querySelectorAll('.workType');
-const hours = document.querySelectorAll('.workHour');
+  workers.forEach((w,i)=>{
+    if(!w.value) return;
 
-workers.forEach((w,i)=>{
-  if(!w.value) return;
+    const data = JSON.parse(w.value);
+    const type = types[i].value;
 
-  const data = JSON.parse(w.value);
-  const type = types[i].value;
+    if(type === 'day'){
+      laborCost += data.day;
+    }else{
+      laborCost += data.hour * (Number(hours[i].value)||0);
+    }
+  });
 
-  if(type === 'day'){
-    laborCost += data.day;
-  }else{
-    laborCost += data.hour * (Number(hours[i].value)||0);
-  }
-});
+  // 車両
+  const vehicle = Number(document.getElementById('vehicle').value)||0;
 
-// 👇 車両
-const vehicle = Number(document.getElementById('vehicle').value)||0;
+  // 合計
+  const totalCost = materialCost + laborCost + vehicle;
 
-// 👇 合計
-const totalCost = materialCost + laborCost + vehicle;
+  // 利益
+  const profit = revenue - totalCost;
+  const margin = revenue ? (profit/revenue)*100 : 0;
 
-// 👇 利益
-const profit = revenue - totalCost;
-const margin = revenue ? (profit/revenue)*100 : 0;
   const sites = getSites();
   sites.push({ siteName, profit, margin });
   saveSites(sites);
